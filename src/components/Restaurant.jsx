@@ -3,22 +3,20 @@
 // This components shows one individual restaurant
 // It receives data from src/app/restaurant/[id]/page.jsx
 
-import { React, useState, useEffect, Suspense } from "react";
-import dynamic from 'next/dynamic'
-import {
-  getRestaurantSnapshotById,
-} from "@/src/lib/firebase/firestore.js";
-import {useUser} from '@/src/lib/getUser'
 import RestaurantDetails from "@/src/components/RestaurantDetails.jsx";
+import { getRestaurantSnapshotById } from "@/src/lib/firebase/firestore.js";
 import { updateRestaurantImage } from "@/src/lib/firebase/storage.js";
+import { useUser } from "@/src/lib/getUser";
+import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState } from "react";
 
-const ReviewDialog = dynamic(() => import('@/src/components/ReviewDialog.jsx'));
+const ReviewDialog = dynamic(() => import("@/src/components/ReviewDialog.jsx"));
 
 export default function Restaurant({
   id,
   initialRestaurant,
   initialUserId,
-  children
+  children,
 }) {
   const [restaurantDetails, setRestaurantDetails] = useState(initialRestaurant);
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +39,7 @@ export default function Restaurant({
     }
 
     const imageURL = await updateRestaurantImage(id, image);
-    setRestaurantDetails({ ...restaurant, photo: imageURL });
+    setRestaurantDetails({ ...restaurantDetails, photo: imageURL });
   }
 
   const handleClose = () => {
@@ -54,9 +52,10 @@ export default function Restaurant({
       setRestaurantDetails(data);
     });
 
-    return () => {
-      unsubscribeFromRestaurant();
-    };
+    // return () => {
+    //   unsubscribeFromRestaurant();
+    // };
+    return unsubscribeFromRestaurant;
   }, []);
 
   return (
@@ -67,15 +66,21 @@ export default function Restaurant({
         handleRestaurantImage={handleRestaurantImage}
         setIsOpen={setIsOpen}
         isOpen={isOpen}
-      >{children}</RestaurantDetails>
-      {userId && <Suspense fallback={<p>Loading...</p>}><ReviewDialog
-        isOpen={isOpen}
-        handleClose={handleClose}
-        review={review}
-        onChange={onChange}
-        userId={userId}
-        id={id}
-      /></Suspense>}
+      >
+        {children}
+      </RestaurantDetails>
+      {userId && (
+        <Suspense fallback={<p>Loading...</p>}>
+          <ReviewDialog
+            isOpen={isOpen}
+            handleClose={handleClose}
+            review={review}
+            onChange={onChange}
+            userId={userId}
+            id={id}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
